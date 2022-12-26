@@ -24,9 +24,11 @@ cv::Vec3b color = cv::Vec3b(255,255,0);
 
 int level = 0; 
 int highest = 1;
-int tetris[H+1];
+int tetris[H];
 int wall = 1 |(1 << (W+1));
-int walls[H+1];
+int walls[H];
+int fullrow = (1 << (W+1)) - 2;
+std::vector<int> rows2delete = {};
 
 int rocks[6][4] = {
     {std::stoi("1111", 0, 2),0,0,0},
@@ -50,10 +52,10 @@ bool tryMoveRight();
 
 void updateBackground(){
     //update background
-    for(int i=0;i < H+1;i++){
+    for(int i=0;i < H;i++){
         for(int j=0;j < W+2;j++){
-            if(isFree(j,i))continue;
-            setBackgroundPixel(j,i,cv::Vec3b(0,0,0));
+            if(isFree(j,i))setBackgroundPixel(j,i,cv::Vec3b(255,255,255));
+            else setBackgroundPixel(j,i,cv::Vec3b(0,0,0));
         }  
     }
 }
@@ -64,8 +66,8 @@ int rock[4];
 bool godownfast = false;
 
 void gameTurn(){
-    if(move_c > 0){
-        
+    if(move_c > 0 && rows2delete.size()<1){
+        //pick new piece only if rows2delete empty
         move_c = 0;
         if(idx>-1){
             highest = std::max(top + rocks_h[idx],highest);
@@ -79,24 +81,34 @@ void gameTurn(){
 
     }
 
+    if(rows2delete.size()>0){
+        int r = rows2delete.back();
+        rows2delete.pop_back();
+        for(int i = r;i < H;i++){
+            tetris[i]=tetris[i+1];
+        }
+        updateBackground();
+    }
+
     while(move_c<1){
 
         top--;
-        for(int i = 0 ; i < 4 ; i++ ){
-            if(!testRock()){
-                godownfast = false;
-                top++;
-                for(int i = 0 ; i < ROCK_SIZE ; i++){
-                    for(int j = 0; j < W+2; j++){
-                        if(test(rock[i],j)){
-                            tetris[top+i] |= 1 << j;
-                        }
-                    }
+        if(!testRock()){
+            godownfast = false;
+            top++;
+            for(int i = 0 ; i < ROCK_SIZE ; i++){
+                tetris[top+i] |= rock[i];
+                if(tetris[top+i] == fullrow){
+                    tetris[top+i] = 0;
+                    rock[i] = 0;
+                    rows2delete.push_back(top+i);
                 }
-                updateBackground();
-                move_c+=1;
-                break;
+                rock[i] = 0;
             }
+            move_c+=1;
+            updateBackground();
+
+            break;
         }
         break;
     }
@@ -104,9 +116,9 @@ void gameTurn(){
 
 
 void LaunchGame(){
-    newBackgroundFrame(cv::Size(W+2,H+1),cv::Scalar(255,255,255));
+    newBackgroundFrame(cv::Size(W+2,H),cv::Scalar(255,255,255));
     start_move = NOW;
-    for(int i = 0;i < H+1;i++){
+    for(int i = 0;i < H;i++){
         walls[i] = wall;
     } 
     walls[0] = (1 << (W+2))-1;
@@ -131,8 +143,8 @@ bool test(int v , int n){
 }
 
 bool isFree(int x,int y){
-    if(test(walls[H-y],x))return false;
-    if(test(tetris[H-y],x))return false;
+    if(test(walls[H-y-1],x))return false;
+    if(test(tetris[H-y-1],x))return false;
     return true;
 }
 
@@ -140,7 +152,7 @@ bool testRock(){
     for(int i = 0 ; i < ROCK_SIZE ; i++){
         for(int j = 0; j < W+2; j++){
             if(test(rock[i],j)){
-                if(!isFree(j,H-top-i))return false;
+                if(!isFree(j,H-1-top-i))return false;
             }
         }
     }
@@ -152,7 +164,7 @@ void showMap(){
     for(int i = 0 ; i < ROCK_SIZE ; i++){
         for(int j = 0; j < W+2; j++){
             if(test(rock[i],j)){
-                setPixel(j,H-top-i,color);
+                setPixel(j,H-1-top-i,color);
             }
         }
     }
@@ -163,7 +175,7 @@ bool tryMoveLeft(){
     for(int i = 0 ; i < ROCK_SIZE ; i++){
         for(int j = 0; j < W+2; j++){
             if(test(rock[i]>>1,j)){
-                if(!isFree(j,H-top-i))return false;
+                if(!isFree(j,H-1-top-i))return false;
             }
         }
     }
@@ -176,7 +188,7 @@ bool tryMoveRight(){
     for(int i = 0 ; i < ROCK_SIZE ; i++){
         for(int j = 0; j < W+2; j++){
             if(test(rock[i]<<1,j)){
-                if(!isFree(j,H-top-i))return false;
+                if(!isFree(j,H-1-top-i))return false;
             }
         }
     }
@@ -204,7 +216,7 @@ void runTetris(){
         default:
             break;
     }
-    if(TIME_MOVE > pow(.95,level) || godownfast){
+    if(TIME_MOVE > pow(.95,level) || godownfast || rows2delete.size()>0){
         gameTurn();
         start_move = NOW;
     }
