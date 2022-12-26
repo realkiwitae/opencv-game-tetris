@@ -1,6 +1,8 @@
 #include "cvutils.h"
 
 cv::Mat img;
+cv::Mat background;
+bool bGotBackground = false;
 int keyboard;
 void drawCircle( double x, double y,double r, cv::Scalar c, std::string msg){
     circle(img, cv::Point(x,y),r, c,cv::FILLED, 8,0);
@@ -11,6 +13,9 @@ void drawCircle( double x, double y,double r, cv::Scalar c, std::string msg){
 void setPixel(int x,int y,cv::Vec3b c){
     
     img.at<cv::Vec3b>(cv::Point(x,y)) = c;
+}
+void setBackgroundPixel(int x,int y,cv::Vec3b c){
+    background.at<cv::Vec3b>(cv::Point(x,y)) = c;
 }
 
 void show(std::string title,int i){
@@ -26,8 +31,15 @@ void  showResize(std::string title,int i,int x){
 }
 
 void newFrame(cv::Size s,cv::Scalar c){
-    img = cv::Mat(s, CV_8UC3, c);
+    if(!bGotBackground)img = cv::Mat(s, CV_8UC3, c);
+    else background.copyTo(img);
 }
+void newBackgroundFrame(cv::Size s,cv::Scalar c){
+    newFrame(s,c);
+    background = cv::Mat(s, CV_8UC3, c);
+    bGotBackground = true;
+}
+
 void newFrameBW(cv::Size s){
     img = cv::Mat(s, CV_8UC1, cv::Scalar(0));
 }
