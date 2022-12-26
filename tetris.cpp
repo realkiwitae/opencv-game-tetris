@@ -45,6 +45,9 @@ void runTetris();
 void showMap();
 bool isFree(int x,int y);
 bool test(int v , int n);
+bool tryMoveLeft();
+bool tryMoveRight();
+
 void updateBackground(){
     //update background
     for(int i=0;i < H+1;i++){
@@ -147,7 +150,7 @@ bool testRock(){
 void showMap(){
 
     for(int i = 0 ; i < ROCK_SIZE ; i++){
-        for(int j = 0; j < W; j++){
+        for(int j = 0; j < W+2; j++){
             if(test(rock[i],j)){
                 setPixel(j,H-top-i,color);
             }
@@ -155,16 +158,46 @@ void showMap(){
     }
     showResize("Tetris",1,40);
 }
+
+bool tryMoveLeft(){
+    for(int i = 0 ; i < ROCK_SIZE ; i++){
+        for(int j = 0; j < W+2; j++){
+            if(test(rock[i]>>1,j)){
+                if(!isFree(j,H-top-i))return false;
+            }
+        }
+    }
+    for(int i = 0 ; i < ROCK_SIZE ; i++){
+        rock[i] = rock[i] >> 1;
+    }
+    return true;
+}
+bool tryMoveRight(){
+    for(int i = 0 ; i < ROCK_SIZE ; i++){
+        for(int j = 0; j < W+2; j++){
+            if(test(rock[i]<<1,j)){
+                if(!isFree(j,H-top-i))return false;
+            }
+        }
+    }
+    for(int i = 0 ; i < ROCK_SIZE ; i++){
+        rock[i] = rock[i] << 1;
+    }
+
+    return true;
+}
+
 extern int keyboard;
 void runTetris(){
     newFrame(cv::Size(W+2,H+1), cv::Scalar(255,255,255));
-    
     switch(keyboard){
         case '<':case 'q':
             color = cv::Vec3b(100,0,100);
+            tryMoveLeft();
             break;
         case '>':case 'd':
             color = cv::Vec3b(0,100,100);
+            tryMoveRight();
             break;
         case 's':
             godownfast = true;
