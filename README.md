@@ -1,6 +1,17 @@
 # opencv-game-tetris
 Tetris game using c++
 
+
+# BUILD
+1. mkdir build/
+2. cd build
+3. cmake ..
+4. make -j8
+5. ..
+
+# Launch the game
+build/tetris
+
 # Game Reference
 https://en.wikipedia.org/wiki/Tetris
 
