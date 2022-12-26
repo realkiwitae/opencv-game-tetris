@@ -33,3 +33,5 @@
 
 # Build
 /[Bb]uild/
+
+/.vscode/
