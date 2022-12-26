@@ -18,6 +18,7 @@ high_resolution_clock::time_point start_move;
 #define H_G 20
 #define W 10
 #define ROCK_SIZE 4
+#define NB_ROCK 6
 
 cv::Vec3b color = cv::Vec3b(255,255,0);
 
@@ -27,16 +28,17 @@ int tetris[H+1];
 int wall = 1 |(1 << (W+1));
 int walls[H+1];
 
-int rocks[5][4] = {
+int rocks[6][4] = {
     {std::stoi("1111", 0, 2),0,0,0},
-    {std::stoi("010", 0, 2),std::stoi("111", 0, 2),std::stoi("010", 0, 2),0},
+    {std::stoi("111", 0, 2),std::stoi("010", 0, 2),0,0},
     {std::stoi("11", 0, 2),std::stoi("01", 0, 2),std::stoi("01", 0, 2),std::stoi("01", 0, 2)},
     {std::stoi("1", 0, 2),std::stoi("1", 0, 2),std::stoi("1", 0, 2),std::stoi("1", 0, 2)},
     {std::stoi("11", 0, 2),std::stoi("11", 0, 2),0,0},
+    {std::stoi("011", 0, 2),std::stoi("110", 0, 2),0,0},
 
 };
-int rocks_s[5] = {(W+2)/2 - 2,(W+2)/2 - 1, (W+2)/2 - 1, (W+2)/2, (W+2)/2};
-int rocks_h[5] = {1,3,4,4,2};
+int rocks_s[6] = {(W+2)/2 - 2,(W+2)/2 - 1, (W+2)/2 - 1, (W+2)/2, (W+2)/2,(W+2)/2 - 1};
+int rocks_h[6] = {1,2,4,4,2,2};
 
 bool testRock();
 void runTetris();
@@ -65,7 +67,7 @@ void gameTurn(){
         if(idx>-1){
             highest = std::max(top + rocks_h[idx],highest);
         }
-        idx = (idx+1) % 5;
+        idx = (idx+1) % NB_ROCK;
         top = H_G;
         // spawn rock
         for(int i = 0 ; i < 4 ; i++ ){
