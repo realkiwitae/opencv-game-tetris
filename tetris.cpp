@@ -201,7 +201,7 @@ bool tryMoveRight(){
 
 extern int keyboard;
 void runTetris(){
-    newFrame(cv::Size(W+2,H+1), cv::Scalar(255,255,255));
+    newFrame(cv::Size(W+2,H), cv::Scalar(255,255,255));
     switch(keyboard){
         case '<':case 'q':
             color = cv::Vec3b(100,0,100);
@@ -212,7 +212,7 @@ void runTetris(){
             tryMoveRight();
             break;
         case 's':
-            godownfast = true;
+            if(move_c<1)godownfast = true;
         default:
             break;
     }
