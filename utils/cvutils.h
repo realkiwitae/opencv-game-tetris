@@ -5,7 +5,6 @@
 
 #include "opencv2/opencv.hpp"
 
-
 extern void show(std::string title,int i);
 void  showResize(std::string title,int i,int x);
 extern void setPixel(int x,int y,cv::Vec3b c);

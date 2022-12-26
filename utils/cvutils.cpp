@@ -1,7 +1,7 @@
 #include "cvutils.h"
 
 cv::Mat img;
-
+int keyboard;
 void drawCircle( double x, double y,double r, cv::Scalar c, std::string msg){
     circle(img, cv::Point(x,y),r, c,cv::FILLED, 8,0);
     putText(img, msg, cv::Point(x - .75*r, y + r/2),
@@ -22,7 +22,7 @@ void  showResize(std::string title,int i,int x){
     cv::Mat out;
     cv::resize(img, out, cv::Size(), x, x,cv::INTER_AREA);
     cv::imshow(title, out);
-    cv::waitKey(i);
+    keyboard = cv::waitKey(i);
 }
 
 void newFrame(cv::Size s,cv::Scalar c){
