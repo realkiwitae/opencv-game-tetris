@@ -260,7 +260,7 @@ bool tryRotate(){
             int a = r[i];
             if(move_offset > 0)a= (r[i] >> move_offset);
             else a= (r[i] << -move_offset);
-            if(test(a<<1,j)){
+            if(test(a,j)){
                 if(!isFree(j,H-1-top-i))return false;
             }
         } 
