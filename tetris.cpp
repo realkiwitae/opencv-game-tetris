@@ -18,7 +18,7 @@ high_resolution_clock::time_point start_move;
 #define H_G 20
 #define W 10
 #define ROCK_SIZE 4
-#define NB_ROCK 6
+#define NB_ROCK 5
 
 cv::Vec3b color = cv::Vec3b(255,255,0);
 
@@ -29,18 +29,46 @@ int wall = 1 |(1 << (W+1));
 int walls[H];
 int fullrow = (1 << (W+1)) - 2;
 std::vector<int> rows2delete = {};
+int move_offset = 0;
 
-int rocks[6][4] = {
-    {std::stoi("1111", 0, 2),0,0,0},
-    {std::stoi("111", 0, 2),std::stoi("010", 0, 2),0,0},
-    {std::stoi("11", 0, 2),std::stoi("01", 0, 2),std::stoi("01", 0, 2),std::stoi("01", 0, 2)},
-    {std::stoi("1", 0, 2),std::stoi("1", 0, 2),std::stoi("1", 0, 2),std::stoi("1", 0, 2)},
-    {std::stoi("11", 0, 2),std::stoi("11", 0, 2),0,0},
-    {std::stoi("011", 0, 2),std::stoi("110", 0, 2),0,0},
-
+int rocks[NB_ROCK][4][4] = {
+    {
+        {std::stoi("1111", 0, 2),0,0,0},
+        {std::stoi("1", 0, 2),std::stoi("1", 0, 2),std::stoi("1", 0, 2),std::stoi("1", 0, 2)},
+        {std::stoi("1111", 0, 2),0,0,0},
+        {std::stoi("1", 0, 2),std::stoi("1", 0, 2),std::stoi("1", 0, 2),std::stoi("1", 0, 2)}
+    },
+    {
+        {std::stoi("111", 0, 2),std::stoi("010", 0, 2),0,0},
+        {std::stoi("10", 0, 2),std::stoi("11", 0, 2),std::stoi("10", 0, 2),0},
+        {std::stoi("010", 0, 2),std::stoi("111", 0, 2),0,0},
+        {std::stoi("01", 0, 2),std::stoi("11", 0, 2),std::stoi("01", 0, 2),0}
+    },
+    {
+        {std::stoi("11", 0, 2),std::stoi("01", 0, 2),std::stoi("01", 0, 2),0},
+        {std::stoi("111", 0, 2),std::stoi("100", 0, 2),0,0},
+        {std::stoi("10", 0, 2),std::stoi("10", 0, 2),std::stoi("11", 0, 2),0},
+        {std::stoi("001", 0, 2),std::stoi("111", 0, 2),0,0}
+    },
+    {
+        {std::stoi("11", 0, 2),std::stoi("11", 0, 2),0,0},
+        {std::stoi("11", 0, 2),std::stoi("11", 0, 2),0,0},
+        {std::stoi("11", 0, 2),std::stoi("11", 0, 2),0,0},
+        {std::stoi("11", 0, 2),std::stoi("11", 0, 2),0,0}
+    },
+    {
+        {std::stoi("011", 0, 2),std::stoi("110", 0, 2),0,0},
+        {std::stoi("10", 0, 2),std::stoi("11", 0, 2),std::stoi("01", 0, 2),0},
+        {std::stoi("110", 0, 2),std::stoi("011", 0, 2),0,0},
+        {std::stoi("01", 0, 2),std::stoi("11", 0, 2),std::stoi("10", 0, 2),0}
+    }
 };
-int rocks_s[6] = {(W+2)/2 - 2,(W+2)/2 - 1, (W+2)/2 - 1, (W+2)/2, (W+2)/2,(W+2)/2 - 1};
-int rocks_h[6] = {1,2,4,4,2,2};
+
+
+int rocks_s[2][5] = {
+                        {4,3,2,2,3},
+                        {1,2,3,2,2}
+                    };
 
 bool testRock();
 void runTetris();
@@ -49,6 +77,7 @@ bool isFree(int x,int y);
 bool test(int v , int n);
 bool tryMoveLeft();
 bool tryMoveRight();
+bool tryRotate();
 
 void updateBackground(){
     //update background
@@ -64,19 +93,21 @@ int idx = -1;
 int top = 1;
 int rock[4];
 bool godownfast = false;
-
+int idx_rot = 0;
 void gameTurn(){
     if(move_c > 0 && rows2delete.size()<1){
         //pick new piece only if rows2delete empty
+        move_offset = 0;
         move_c = 0;
         if(idx>-1){
-            highest = std::max(top + rocks_h[idx],highest);
+            highest = std::max(top + rocks_s[(idx_rot+1)%2][idx],highest);
         }
         idx = (idx+1) % NB_ROCK;
         top = H_G;
         // spawn rock
+        idx_rot = rand() % 4;
         for(int i = 0 ; i < 4 ; i++ ){
-            rock[i] = rocks[idx][i]<< rocks_s[idx];           
+            rock[i] = rocks[idx][idx_rot][i]<< (W+2-rocks_s[(idx_rot)%2][idx])/2;           
         }
 
     }
@@ -97,7 +128,9 @@ void gameTurn(){
             godownfast = false;
             top++;
             for(int i = 0 ; i < ROCK_SIZE ; i++){
-                tetris[top+i] |= rock[i];
+                if(move_offset == 0)tetris[top+i] |= rock[i];
+                else if(move_offset > 0)tetris[top+i] |= (rock[i] >> move_offset);
+                else tetris[top+i] |= (rock[i] << -move_offset);
                 if(tetris[top+i] == fullrow){
                     tetris[top+i] = 0;
                     rock[i] = 0;
@@ -151,7 +184,10 @@ bool isFree(int x,int y){
 bool testRock(){
     for(int i = 0 ; i < ROCK_SIZE ; i++){
         for(int j = 0; j < W+2; j++){
-            if(test(rock[i],j)){
+            int a = rock[i];
+            if(move_offset > 0)a= (rock[i] >> move_offset);
+            else a= (rock[i] << -move_offset);
+            if(test(a,j)){
                 if(!isFree(j,H-1-top-i))return false;
             }
         }
@@ -163,7 +199,10 @@ void showMap(){
 
     for(int i = 0 ; i < ROCK_SIZE ; i++){
         for(int j = 0; j < W+2; j++){
-            if(test(rock[i],j)){
+            int a = rock[i];
+            if(move_offset > 0)a= (rock[i] >> move_offset);
+            else a= (rock[i] << -move_offset);
+            if(test(a,j)){
                 setPixel(j,H-1-top-i,color);
             }
         }
@@ -174,27 +213,51 @@ void showMap(){
 bool tryMoveLeft(){
     for(int i = 0 ; i < ROCK_SIZE ; i++){
         for(int j = 0; j < W+2; j++){
-            if(test(rock[i]>>1,j)){
+            int a = rock[i];
+            if(move_offset > 0)a= (rock[i] >> move_offset);
+            else a= (rock[i] << -move_offset);
+            if(test(a>>1,j)){
                 if(!isFree(j,H-1-top-i))return false;
             }
         }
     }
-    for(int i = 0 ; i < ROCK_SIZE ; i++){
-        rock[i] = rock[i] >> 1;
-    }
+
+    move_offset++;
     return true;
 }
 bool tryMoveRight(){
     for(int i = 0 ; i < ROCK_SIZE ; i++){
         for(int j = 0; j < W+2; j++){
-            if(test(rock[i]<<1,j)){
+            int a = rock[i];
+            if(move_offset > 0)a= (rock[i] >> move_offset);
+            else a= (rock[i] << -move_offset);
+            if(test(a<<1,j)){
                 if(!isFree(j,H-1-top-i))return false;
             }
         }
     }
-    for(int i = 0 ; i < ROCK_SIZE ; i++){
-        rock[i] = rock[i] << 1;
+
+    move_offset--;
+    return true;
+}
+
+bool tryRotate(){
+    int r[4];
+    for(int i = 0 ; i < ROCK_SIZE ; i++ ){
+        r[i]= rocks[idx][(idx_rot+1)%4][i] << (W+2-rocks_s[(idx_rot+1)%2][idx])/2;
+        for(int j = 0; j < W+2; j++){
+            int a = r[i];
+            if(move_offset > 0)a= (r[i] >> move_offset);
+            else a= (r[i] << -move_offset);
+            if(test(a<<1,j)){
+                if(!isFree(j,H-1-top-i))return false;
+            }
+        } 
     }
+    for(int i = 0;i < ROCK_SIZE; i++){
+        rock[i] = r[i];
+    }
+    idx_rot++;
 
     return true;
 }
@@ -211,6 +274,9 @@ void runTetris(){
             color = cv::Vec3b(0,100,100);
             tryMoveRight();
             break;
+        case 'z':
+            tryRotate();
+            break;    
         case 's':
             if(move_c<1)godownfast = true;
         default:
