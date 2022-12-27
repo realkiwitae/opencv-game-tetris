@@ -42,3 +42,10 @@ DONE
 # Bonus Features (optional)
 Hold piece: Press a key to do Hold/Swap tetromino. Hold piece - TetrisWiki 
 Ghost piece: Ghost piece | Tetris Wiki | Fandom 
+
+
+# Notes
+I added Level for each 10 score, scores increments are 2**nbrows cleared per turn
+UI shows lvl and scores
+
+noticed a bug on rotation on left side can go inside the wall somehow

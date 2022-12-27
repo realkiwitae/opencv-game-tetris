@@ -22,7 +22,8 @@ high_resolution_clock::time_point start_move;
 
 cv::Vec3b color = cv::Vec3b(255,255,0);
 
-int level = 0; 
+int level = 1; 
+int score = 0;
 int highest = 1;
 int tetris[H];
 int wall = 1 |(1 << (W+1));
@@ -127,6 +128,7 @@ void gameTurn(){
         if(!testRock()){
             godownfast = false;
             top++;
+            int s = 0;
             for(int i = 0 ; i < ROCK_SIZE ; i++){
                 if(move_offset == 0)tetris[top+i] |= rock[i];
                 else if(move_offset > 0)tetris[top+i] |= (rock[i] >> move_offset);
@@ -135,6 +137,9 @@ void gameTurn(){
                     tetris[top+i] = 0;
                     rock[i] = 0;
                     rows2delete.push_back(top+i);
+                    score += pow(2,s);
+                    s++;
+                    level = 1 + score/10;
                 }
                 rock[i] = 0;
             }
@@ -207,7 +212,13 @@ void showMap(){
             }
         }
     }
-    showResize("Tetris",1,40);
+
+    //draw UI
+
+    resize(40);
+    drawText(40 ,25*40-10, cv::Scalar(0,40,200) , "Score: "+std::to_string(score),1);
+    drawText(8*40 ,25*40-10, cv::Scalar(0,40,200) , "Level: "+std::to_string(level),1);
+    showResize("Tetris",1);
 }
 
 bool tryMoveLeft(){
@@ -282,7 +293,7 @@ void runTetris(){
         default:
             break;
     }
-    if(TIME_MOVE > pow(.95,level) || godownfast || rows2delete.size()>0){
+    if(TIME_MOVE > pow(.95,level-1) || godownfast || rows2delete.size()>0){
         gameTurn();
         start_move = NOW;
     }

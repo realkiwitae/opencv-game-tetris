@@ -2,12 +2,18 @@
 
 cv::Mat img;
 cv::Mat background;
+cv::Mat resized;
 bool bGotBackground = false;
 int keyboard;
 void drawCircle( double x, double y,double r, cv::Scalar c, std::string msg){
     circle(img, cv::Point(x,y),r, c,cv::FILLED, 8,0);
     putText(img, msg, cv::Point(x - .75*r, y + r/2),
      cv::FONT_HERSHEY_SIMPLEX, 1 , cv::Scalar() ,1, cv::LINE_AA);
+}
+
+void drawText(double x,double y , cv::Scalar c , std::string msg,int s){
+    putText(resized, msg, cv::Point(x, y),
+     cv::FONT_HERSHEY_SIMPLEX, s , c ,1, cv::LINE_AA);
 }
 
 void setPixel(int x,int y,cv::Vec3b c){
@@ -23,12 +29,14 @@ void show(std::string title,int i){
     cv::waitKey(i);
 }
 
-void  showResize(std::string title,int i,int x){
-    cv::Mat out;
-    cv::resize(img, out, cv::Size(), x, x,cv::INTER_AREA);
-    cv::imshow(title, out);
+void resize(int x){
+    cv::resize(img, resized, cv::Size(), x, x,cv::INTER_AREA);
+}
+void  showResize(std::string title,int i){
+    cv::imshow(title, resized);
     keyboard = cv::waitKey(i);
 }
+
 
 void newFrame(cv::Size s,cv::Scalar c){
     if(!bGotBackground)img = cv::Mat(s, CV_8UC3, c);
@@ -46,7 +54,7 @@ void newFrameBW(cv::Size s){
 
 void drawLine( std::vector<cv::Point> pts , cv::Scalar c, int thickness, std::string msg){
     
-    for(int i = 0; i < pts.size()-1 ; i++){
+    for(int i = 0; i < (int)pts.size()-1 ; i++){
         line(img, pts[i], pts[i+1], c,thickness , cv::LineTypes::LINE_8);
         putText(img, msg, (pts[i]+pts[i+1])/2,
         cv::FONT_HERSHEY_SIMPLEX, 1 , c,1, cv::LINE_AA);
