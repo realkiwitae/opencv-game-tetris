@@ -95,10 +95,14 @@ int top = 1;
 int rock[4];
 bool godownfast = false;
 int idx_rot = 0;
+bool bGameIsOver = false;
+bool bJustSpawned = false;
 void gameTurn(){
+    bJustSpawned = false;
     if(move_c > 0 && rows2delete.size()<1){
         //pick new piece only if rows2delete empty
         move_offset = 0;
+        bJustSpawned = true;
         move_c = 0;
         if(idx>-1){
             highest = std::max(top + rocks_s[(idx_rot+1)%2][idx],highest);
@@ -145,7 +149,7 @@ void gameTurn(){
             }
             move_c+=1;
             updateBackground();
-
+            if(s==0 && bJustSpawned)bGameIsOver = true;
             break;
         }
         break;
@@ -218,6 +222,7 @@ void showMap(){
     resize(40);
     drawText(40 ,25*40-10, cv::Scalar(0,40,200) , "Score: "+std::to_string(score),1);
     drawText(8*40 ,25*40-10, cv::Scalar(0,40,200) , "Level: "+std::to_string(level),1);
+    if(bGameIsOver)drawText(2*40-10 ,10*40, cv::Scalar(200,10,200) , "GAME OVER",2);
     showResize("Tetris",1);
 }
 
